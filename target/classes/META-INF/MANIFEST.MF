@@ -1,0 +1,33 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1781017756057
+Build-Jdk-Spec: 11
+Bundle-Activator: org.wso2.custom.authenticator.internal.AdPasswordExpir
+ yAuthenticatorServiceComponent
+Bundle-ManifestVersion: 2
+Bundle-Name: AD Password Expiry Authenticator
+Bundle-SymbolicName: org.wso2.custom.authenticator.ad.password.expiry
+Bundle-Version: 1.0.0
+Created-By: Apache Maven Bundle Plugin 5.1.9
+Export-Package: org.wso2.custom.authenticator;version="1.0.0";uses:="jav
+ ax.servlet.http,org.wso2.carbon.identity.application.authentication.fra
+ mework.context,org.wso2.carbon.identity.application.authentication.fram
+ ework.exception,org.wso2.carbon.identity.application.authenticator.basi
+ cauth"
+Import-Package: org.osgi.framework;version="[1.9,2)",org.apache.commons.
+ lang;version="[2.6,3)",org.apache.commons.logging;version="[1.2,2)",org
+ .wso2.carbon.identity.application.authentication.framework;version="[7.
+ 8,8)",org.wso2.carbon.identity.application.authentication.framework.con
+ text;version="[7.8,8)",org.wso2.carbon.identity.application.authenticat
+ ion.framework.exception;version="[7.8,8)",org.wso2.carbon.identity.appl
+ ication.authentication.framework.model;version="[7.8,8)",org.wso2.carbo
+ n.identity.application.authentication.framework.util;version="[7.8,8)",
+ org.wso2.carbon.identity.application.authenticator.basicauth;version="[
+ 6.8,7)",org.wso2.carbon.user.api;version="[1.0,2)",org.wso2.carbon.user
+ .core;version="[4.10,5)",org.wso2.carbon.user.core.common;version="[4.1
+ 0,5)",org.wso2.carbon.user.core.service;version="[4.10,5)",org.wso2.car
+ bon.user.core.util;version="[4.10,5)",org.wso2.carbon.utils.multitenanc
+ y;version="[4.10,5)",javax.naming,javax.naming.directory,javax.servlet.
+ http;version="[2.6,3)",org.wso2.carbon.user.core.tenant;version="[4.10,
+ 5)",org.osgi.service.component;version="[1.1,2)"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=11))"
+Tool: Bnd-6.3.1.202206071316

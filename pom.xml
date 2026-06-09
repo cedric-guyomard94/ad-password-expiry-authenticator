@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.wso2.custom</groupId>
+    <artifactId>org.wso2.custom.authenticator.ad.password.expiry</artifactId>
+    <version>1.0.0</version>
+    <packaging>bundle</packaging>
+    <name>AD Password Expiry Authenticator</name>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <carbon.identity.framework.version>7.8.23</carbon.identity.framework.version>
+        <identity.local.auth.basicauth.version>6.8.20</identity.local.auth.basicauth.version>
+        <carbon.kernel.version>4.10.42</carbon.kernel.version>
+        <commons.lang.version>2.6.0.wso2v1</commons.lang.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>wso2-nexus</id>
+            <url>https://maven.wso2.org/nexus/content/groups/wso2-public/</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!-- BasicAuthenticator to extend -->
+        <dependency>
+            <groupId>org.wso2.carbon.identity.local.auth.basicauth</groupId>
+            <artifactId>org.wso2.carbon.identity.application.authenticator.basicauth</artifactId>
+            <version>${identity.local.auth.basicauth.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Authentication framework -->
+        <dependency>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
+            <artifactId>org.wso2.carbon.identity.application.authentication.framework</artifactId>
+            <version>${carbon.identity.framework.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- User core -->
+        <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.user.core</artifactId>
+            <version>${carbon.kernel.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.user.api</artifactId>
+            <version>${carbon.kernel.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Commons -->
+        <dependency>
+            <groupId>commons-lang.wso2</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>${commons.lang.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- OSGi -->
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>5.1.9</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Name>${project.name}</Bundle-Name>
+                        <Bundle-Version>${project.version}</Bundle-Version>
+                        <Bundle-Activator>org.wso2.custom.authenticator.internal.AdPasswordExpiryAuthenticatorServiceComponent</Bundle-Activator>
+                        <Private-Package>org.wso2.custom.authenticator.internal</Private-Package>
+                        <Export-Package>
+                            org.wso2.custom.authenticator;version="${project.version}"
+                        </Export-Package>
+                        <Import-Package>
+                            org.osgi.framework,
+                            org.osgi.service.component,
+                            org.apache.commons.lang,
+                            org.apache.commons.logging,
+                            org.wso2.carbon.identity.application.authentication.framework,
+                            org.wso2.carbon.identity.application.authentication.framework.context,
+                            org.wso2.carbon.identity.application.authentication.framework.exception,
+                            org.wso2.carbon.identity.application.authentication.framework.model,
+                            org.wso2.carbon.identity.application.authentication.framework.util,
+                            org.wso2.carbon.identity.application.authenticator.basicauth,
+                            org.wso2.carbon.user.api,
+                            org.wso2.carbon.user.core,
+                            org.wso2.carbon.user.core.common,
+                            org.wso2.carbon.user.core.service,
+                            org.wso2.carbon.user.core.util,
+                            org.wso2.carbon.utils.multitenancy,
+                            javax.naming,
+                            javax.naming.directory,
+                            javax.servlet.http,
+                            !java.*,
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
