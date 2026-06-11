@@ -90,12 +90,12 @@ public class AdPasswordExpiryAuthenticator extends BasicAuthenticator {
 
                 if (AD_ERROR_MUST_CHANGE_PASSWORD.equals(adCode)) {
                     log.info("AD error 773 (must change password) detected for user in store: " + userStoreDomain);
-                    setAuthenticatorMessage(context, MSG_ID_MUST_CHANGE_PASSWORD,
+                    setAuthenticatorMessage(request, context, MSG_ID_MUST_CHANGE_PASSWORD,
                             "Your AD password must be changed before you can log in. " +
                             "Please contact your administrator or change your password in Active Directory.");
                 } else if (AD_ERROR_PASSWORD_EXPIRED.equals(adCode)) {
                     log.info("AD error 532 (password expired) detected for user in store: " + userStoreDomain);
-                    setAuthenticatorMessage(context, MSG_ID_PASSWORD_EXPIRED,
+                    setAuthenticatorMessage(request, context, MSG_ID_PASSWORD_EXPIRED,
                             "Your AD password has expired. Please change it before logging in.");
                 }
             }
@@ -130,7 +130,7 @@ public class AdPasswordExpiryAuthenticator extends BasicAuthenticator {
             log.debug("[AdPasswordExpiryAuthenticator] targetManager resolved for domain: " + userStoreDomain);
 
             RealmConfiguration cfg = targetManager.getRealmConfiguration();
-            String connectionUrl = cfg.getUserStoreProperty(PROP_CONNECTION_URL);
+            String connectionUrl = getConnectionUrl(cfg);
             if (StringUtils.isBlank(connectionUrl)) {
                 log.warn("[AdPasswordExpiryAuthenticator] ConnectionURL not found in user store config");
                 return null;
@@ -188,6 +188,35 @@ public class AdPasswordExpiryAuthenticator extends BasicAuthenticator {
         if (StringUtils.isBlank(message)) return null;
         if (message.contains(AD_ERROR_MUST_CHANGE_PASSWORD)) return AD_ERROR_MUST_CHANGE_PASSWORD;
         if (message.contains(AD_ERROR_PASSWORD_EXPIRED))     return AD_ERROR_PASSWORD_EXPIRED;
+        return null;
+    }
+
+    private String getConnectionUrl(RealmConfiguration cfg) {
+        String connectionUrl = cfg.getUserStoreProperty(PROP_CONNECTION_URL);
+        if (StringUtils.isNotBlank(connectionUrl)) {
+            return connectionUrl;
+        }
+
+        if (log.isDebugEnabled()) {
+            try {
+                if (cfg.getUserStoreProperties() != null) {
+                    log.debug("[AdPasswordExpiryAuthenticator] user store properties available: " + cfg.getUserStoreProperties().keySet());
+                }
+            } catch (Exception e) {
+                log.debug("[AdPasswordExpiryAuthenticator] Failed to inspect user store properties", e);
+            }
+        }
+
+        if (cfg.getUserStoreProperties() != null) {
+            for (String candidate : new String[] {"ConnectionURL", "connectionURL", "connectionUrl", "connection.url", "url", "ldap.url", "provider.url"}) {
+                String value = cfg.getUserStoreProperties().get(candidate);
+                if (StringUtils.isNotBlank(value)) {
+                    log.warn("[AdPasswordExpiryAuthenticator] Fallback found connection URL using property key: " + candidate);
+                    return value;
+                }
+            }
+        }
+
         return null;
     }
 
@@ -275,13 +304,17 @@ public class AdPasswordExpiryAuthenticator extends BasicAuthenticator {
         return secondary;
     }
 
-    private void setAuthenticatorMessage(AuthenticationContext context,
-            String messageId, String message) {
+    private void setAuthenticatorMessage(HttpServletRequest request,
+            AuthenticationContext context, String messageId, String message) {
         AuthenticatorMessage msg = new AuthenticatorMessage(
                 FrameworkConstants.AuthenticatorMessageType.ERROR,
                 messageId,
                 message,
                 null);
         context.setProperty(AUTHENTICATOR_MESSAGE_KEY, msg);
+        request.setAttribute(AUTHENTICATOR_MESSAGE_KEY, msg);
+        if (log.isDebugEnabled()) {
+            log.debug("[AdPasswordExpiryAuthenticator] Stored authenticator message: " + messageId);
+        }
     }
 }
