@@ -74,6 +74,7 @@ public class AdPasswordExpiryAuthenticator extends BasicAuthenticator {
             super.processAuthenticationResponse(request, response, context);
         } catch (AuthenticationFailedException e) {
             // Normal auth failed — probe AD for a specific sub-error code
+            log.info("[AdPasswordExpiryAuthenticator] Basic auth failed, probing for AD-specific error");
             String username = request.getParameter("username");
             String password  = request.getParameter("password");
 
@@ -82,8 +83,10 @@ public class AdPasswordExpiryAuthenticator extends BasicAuthenticator {
                 String tenantAwareUser    = MultitenantUtils.getTenantAwareUsername(username);
                 String userStoreDomain    = UserCoreUtil.extractDomainFromName(tenantAwareUser);
                 String usernameOnly       = UserCoreUtil.removeDomainFromName(tenantAwareUser);
+                log.info("[AdPasswordExpiryAuthenticator] Probing AD: username=" + usernameOnly + ", domain=" + userStoreDomain + ", tenant=" + tenantDomain);
 
                 String adCode = probeAdError(usernameOnly, password, userStoreDomain, tenantDomain, context);
+                log.info("[AdPasswordExpiryAuthenticator] Probe result: " + adCode);
 
                 if (AD_ERROR_MUST_CHANGE_PASSWORD.equals(adCode)) {
                     log.info("AD error 773 (must change password) detected for user in store: " + userStoreDomain);
@@ -113,14 +116,26 @@ public class AdPasswordExpiryAuthenticator extends BasicAuthenticator {
 
         try {
             AbstractUserStoreManager rootManager = resolveRootStoreManager(tenantDomain, context);
-            if (rootManager == null) return null;
+            if (rootManager == null) {
+                log.warn("[AdPasswordExpiryAuthenticator] rootManager is null for tenant: " + tenantDomain);
+                return null;
+            }
+            log.debug("[AdPasswordExpiryAuthenticator] rootManager resolved for tenant: " + tenantDomain);
 
             AbstractUserStoreManager targetManager = resolveTargetStoreManager(rootManager, userStoreDomain);
-            if (targetManager == null) return null;
+            if (targetManager == null) {
+                log.warn("[AdPasswordExpiryAuthenticator] targetManager is null for domain: " + userStoreDomain);
+                return null;
+            }
+            log.debug("[AdPasswordExpiryAuthenticator] targetManager resolved for domain: " + userStoreDomain);
 
             RealmConfiguration cfg = targetManager.getRealmConfiguration();
             String connectionUrl = cfg.getUserStoreProperty(PROP_CONNECTION_URL);
-            if (StringUtils.isBlank(connectionUrl)) return null;
+            if (StringUtils.isBlank(connectionUrl)) {
+                log.warn("[AdPasswordExpiryAuthenticator] ConnectionURL not found in user store config");
+                return null;
+            }
+            log.debug("[AdPasswordExpiryAuthenticator] ConnectionURL: " + connectionUrl);
 
             String bindDn = buildBindDn(username, cfg);
             if (StringUtils.isBlank(bindDn)) {
@@ -143,12 +158,18 @@ public class AdPasswordExpiryAuthenticator extends BasicAuthenticator {
             env.put("com.sun.jndi.ldap.read.timeout", timeout);
 
             try {
+                log.debug("[AdPasswordExpiryAuthenticator] Attempting LDAP bind with DN: " + bindDn);
                 InitialDirContext ctx = new InitialDirContext(env);
                 ctx.close();
+                log.debug("[AdPasswordExpiryAuthenticator] LDAP bind succeeded — no AD error");
                 // Bind succeeded — no AD error to report
                 return null;
             } catch (NamingException ne) {
-                return extractAdErrorCode(ne.getMessage());
+                String errorMsg = ne.getMessage();
+                log.info("[AdPasswordExpiryAuthenticator] LDAP NamingException: " + errorMsg);
+                String adCode = extractAdErrorCode(errorMsg);
+                log.info("[AdPasswordExpiryAuthenticator] Extracted AD code: " + adCode);
+                return adCode;
             }
 
         } catch (Exception ex) {
